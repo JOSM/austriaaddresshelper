@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project name="austriaaddresshelper" default="dist" basedir=".">
+
+    <!-- enter the SVN commit message -->
+    <property name="commit.message" value="Commit message"/>
+    <!-- enter the *lowest* JOSM version this plugin is currently compatible with -->
+    <property name="plugin.main.version" value="7001"/>
+
+    <!-- Configure these properties (replace "..." accordingly).
+         See http://josm.openstreetmap.de/wiki/DevelopersGuide/DevelopingPlugins
+    -->
+    <property name="plugin.author" value="Thomas Konrad"/>
+    <property name="plugin.class" value="org.openstreetmap.josm.plugins.austriaaddresshelper.AustriaAddressHelperPlugin"/>
+    <property name="plugin.description" value="Automatically assigns addresses to selected objects in Austria. Data (c) Österreichisches Adressregister."/>
+    <property name="plugin.icon" value="images/icon.png"/>
+    <property name="plugin.link" value="http://wiki.openstreetmap.org/wiki/JOSM/Plugins/AustriaAddressHelper"/>
+    <!--<property name="plugin.early" value="..."/>-->
+    <!--<property name="plugin.requires" value="..."/>-->
+    <!--<property name="plugin.stage" value="..."/>-->
+
+    <property name="plugin.canloadatruntime" value="true"/>
+
+    <!-- ** include targets that all plugins have in common ** -->
+    <import file="../build-common.xml"/>
+  
+</project>
