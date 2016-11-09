@@ -1,6 +1,5 @@
 package org.openstreetmap.josm.plugins.austriaaddresshelper;
 
-import com.owlike.genson.Genson;
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.JosmAction;
 import org.openstreetmap.josm.command.ChangeCommand;
@@ -13,23 +12,25 @@ import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.gui.Notification;
+import org.openstreetmap.josm.tools.HttpClient;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Shortcut;
 
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
@@ -77,29 +78,25 @@ public class AustriaAddressHelperAction extends JosmAction {
                         + "&epsg=4326"
                 );
 
-                URLConnection connection = url.openConnection();
-                connection.setRequestProperty("User-Agent", "JOSM Plugin Austria Address Helper v1.0");
-                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                final JsonObject json;
+                try (BufferedReader in = HttpClient.create(url)
+                        .setReasonForRequest("JOSM Plugin Austria Address Helper v1.0")
+                        .setHeader("User-Agent", "JOSM Plugin Austria Address Helper v1.0")
+                        .connect()
+                        .getContentReader();
+                     JsonReader reader = Json.createReader(in)) {
+                    json = reader.readObject();
+                }
 
-                String inputLine;
-                String wholeResponse = "";
-
-                while ((inputLine = in.readLine()) != null)
-                    wholeResponse += inputLine;
-
-                in.close();
-
-                HashMap result = (HashMap)new Genson().deserialize(wholeResponse, Object.class);
-                ArrayList addressItems = (ArrayList)result.get("results");
-
+                final JsonArray addressItems = json.getJsonArray("results");
                 if (addressItems.size() > 0) {
-                    HashMap firstAddress = (HashMap)addressItems.get(0);
+                    final JsonObject firstAddress = addressItems.getJsonObject(0);
 
                     String country = "AT";
-                    String city = (String)firstAddress.get("municipality");
-                    String postcode = (String)firstAddress.get("postcode");
+                    String city = firstAddress.getString("municipality");
+                    String postcode = firstAddress.getString("postcode");
                     String streetOrPlace;
-                    String housenumber = (String)firstAddress.get("house_number");
+                    String housenumber = firstAddress.getString("house_number");
 
                     final OsmPrimitive newObject = selectedObject instanceof Node
                             ? new Node(((Node) selectedObject))
@@ -113,18 +110,17 @@ public class AustriaAddressHelperAction extends JosmAction {
                     newObject.put("addr:postcode", postcode);
 
                     if ((firstAddress.get("address_type")).equals("place")) {
-                        streetOrPlace = (String)firstAddress.get("street");
+                        streetOrPlace = firstAddress.getString("street");
                         newObject.put("addr:place", streetOrPlace);
                     } else {
-                        streetOrPlace = (String)firstAddress.get("street");
+                        streetOrPlace = firstAddress.getString("street");
                         newObject.put("addr:street", streetOrPlace);
                     }
 
                     newObject.put("addr:housenumber", housenumber);
 
                     // Set or add the address source.
-                    String copyright = (String)result.get("copyright");
-                    copyright = "Adressdaten: " + copyright;
+                    final String copyright = "Adressdaten: " + json.getString("copyright");
                     String source = selectedObject.get("source");
 
                     if (source == null) {
