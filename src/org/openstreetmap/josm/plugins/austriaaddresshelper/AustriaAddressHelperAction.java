@@ -3,9 +3,15 @@ package org.openstreetmap.josm.plugins.austriaaddresshelper;
 import com.owlike.genson.Genson;
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.JosmAction;
+import org.openstreetmap.josm.command.ChangeCommand;
+import org.openstreetmap.josm.command.Command;
+import org.openstreetmap.josm.command.SequenceCommand;
 import org.openstreetmap.josm.data.coor.CoordinateFormat;
 import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.data.osm.Relation;
+import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Shortcut;
@@ -24,8 +30,10 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
+import static org.openstreetmap.josm.tools.I18n.trn;
 
 /**
  * Created by tom on 02/08/15.
@@ -53,6 +61,7 @@ public class AustriaAddressHelperAction extends JosmAction {
             return;
         }
 
+        final List<Command> commands = new ArrayList<>();
         for (OsmPrimitive selectedObject : sel) {
             boolean noExceptionThrown = false;
             Exception exception = null;
@@ -92,19 +101,26 @@ public class AustriaAddressHelperAction extends JosmAction {
                     String streetOrPlace;
                     String housenumber = (String)firstAddress.get("house_number");
 
-                    selectedObject.put("addr:country", country);
-                    selectedObject.put("addr:city", city);
-                    selectedObject.put("addr:postcode", postcode);
+                    final OsmPrimitive newObject = selectedObject instanceof Node
+                            ? new Node(((Node) selectedObject))
+                            : selectedObject instanceof Way
+                            ? new Way((Way) selectedObject)
+                            : selectedObject instanceof Relation
+                            ? new Relation((Relation) selectedObject)
+                            : null;
+                    newObject.put("addr:country", country);
+                    newObject.put("addr:city", city);
+                    newObject.put("addr:postcode", postcode);
 
                     if ((firstAddress.get("address_type")).equals("place")) {
                         streetOrPlace = (String)firstAddress.get("street");
-                        selectedObject.put("addr:place", streetOrPlace);
+                        newObject.put("addr:place", streetOrPlace);
                     } else {
                         streetOrPlace = (String)firstAddress.get("street");
-                        selectedObject.put("addr:street", streetOrPlace);
+                        newObject.put("addr:street", streetOrPlace);
                     }
 
-                    selectedObject.put("addr:housenumber", housenumber);
+                    newObject.put("addr:housenumber", housenumber);
 
                     // Set or add the address source.
                     String copyright = (String)result.get("copyright");
@@ -112,12 +128,12 @@ public class AustriaAddressHelperAction extends JosmAction {
                     String source = selectedObject.get("source");
 
                     if (source == null) {
-                        selectedObject.put("source", copyright);
+                        newObject.put("source", copyright);
                     } else if (!source.contains(copyright)) {
-                        selectedObject.put("source", source + "; " + copyright);
+                        newObject.put("source", source + "; " + copyright);
                     }
 
-                    selectedObject.setModified(true);
+                    commands.add(new ChangeCommand(selectedObject, newObject));
 
                     new Notification(
                             "<strong>" + tr("Austria Address Helper") + "</strong><br />" +
@@ -155,6 +171,9 @@ public class AustriaAddressHelperAction extends JosmAction {
                             .show();
                 }
             }
+        }
+        if (!commands.isEmpty()) {
+            Main.main.undoRedo.add(new SequenceCommand(trn("Add address", "Add addresses", commands.size()), commands));
         }
     }
 
