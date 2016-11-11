@@ -40,7 +40,7 @@ import static org.openstreetmap.josm.tools.I18n.trn;
  * Created by tom on 02/08/15.
  */
 public class AustriaAddressHelperAction extends JosmAction {
-    final String baseUrl = "https://bev-reverse-geocoder.thomaskonrad.at/reverse-geocode/json";
+    static final String baseUrl = "https://bev-reverse-geocoder.thomaskonrad.at/reverse-geocode/json";
 
     public AustriaAddressHelperAction() {
         super(tr("Fetch Address"), new ImageProvider("icon.png"), tr("Fetch Address"),
@@ -74,7 +74,7 @@ public class AustriaAddressHelperAction extends JosmAction {
         }
     }
     
-    public OsmPrimitive loadAddress(OsmPrimitive selectedObject){
+    public static OsmPrimitive loadAddress(OsmPrimitive selectedObject){
         boolean noExceptionThrown = false;
         Exception exception = null;
 
