@@ -40,7 +40,7 @@ import static org.openstreetmap.josm.tools.I18n.trn;
  * Created by tom on 02/08/15.
  */
 public class AustriaAddressHelperAction extends JosmAction {
-    final String baseUrl = "https://bev-reverse-geocoder.thomaskonrad.at/reverse-geocode/json";
+    static final String baseUrl = "https://bev-reverse-geocoder.thomaskonrad.at/reverse-geocode/json";
 
     public AustriaAddressHelperAction() {
         super(tr("Fetch Address"), new ImageProvider("icon.png"), tr("Fetch Address"),
@@ -64,113 +64,124 @@ public class AustriaAddressHelperAction extends JosmAction {
 
         final List<Command> commands = new ArrayList<>();
         for (OsmPrimitive selectedObject : sel) {
-            boolean noExceptionThrown = false;
-            Exception exception = null;
-
-            LatLon center = selectedObject.getBBox().getCenter();
-
-            try {
-                URL url = new URL(baseUrl
-                        + "?lat=" + URLEncoder.encode(center.latToString(CoordinateFormat.DECIMAL_DEGREES), "UTF-8")
-                        + "&lon=" + URLEncoder.encode(center.lonToString(CoordinateFormat.DECIMAL_DEGREES), "UTF-8")
-                        + "&distance=30"
-                        + "&limit=1"
-                        + "&epsg=4326"
-                );
-
-                final JsonObject json;
-                try (BufferedReader in = HttpClient.create(url)
-                        .setReasonForRequest("JOSM Plugin Austria Address Helper v1.0")
-                        .setHeader("User-Agent", "JOSM Plugin Austria Address Helper v1.0")
-                        .connect()
-                        .getContentReader();
-                     JsonReader reader = Json.createReader(in)) {
-                    json = reader.readObject();
-                }
-
-                final JsonArray addressItems = json.getJsonArray("results");
-                if (addressItems.size() > 0) {
-                    final JsonObject firstAddress = addressItems.getJsonObject(0);
-
-                    String country = "AT";
-                    String city = firstAddress.getString("municipality");
-                    String postcode = firstAddress.getString("postcode");
-                    String streetOrPlace;
-                    String housenumber = firstAddress.getString("house_number");
-
-                    final OsmPrimitive newObject = selectedObject instanceof Node
-                            ? new Node(((Node) selectedObject))
-                            : selectedObject instanceof Way
-                            ? new Way((Way) selectedObject)
-                            : selectedObject instanceof Relation
-                            ? new Relation((Relation) selectedObject)
-                            : null;
-                    newObject.put("addr:country", country);
-                    newObject.put("addr:city", city);
-                    newObject.put("addr:postcode", postcode);
-
-                    if ((firstAddress.get("address_type")).equals("place")) {
-                        streetOrPlace = firstAddress.getString("street");
-                        newObject.put("addr:place", streetOrPlace);
-                    } else {
-                        streetOrPlace = firstAddress.getString("street");
-                        newObject.put("addr:street", streetOrPlace);
-                    }
-
-                    newObject.put("addr:housenumber", housenumber);
-
-                    // Set or add the address source.
-                    final String copyright = "Adressdaten: " + json.getString("copyright");
-                    String source = selectedObject.get("source");
-
-                    if (source == null) {
-                        newObject.put("source", copyright);
-                    } else if (!source.contains(copyright)) {
-                        newObject.put("source", source + "; " + copyright);
-                    }
-
-                    commands.add(new ChangeCommand(selectedObject, newObject));
-
-                    new Notification(
-                            "<strong>" + tr("Austria Address Helper") + "</strong><br />" +
-                            tr("Successfully added address to selected object:") + "<br />" +
-                            encodeHTML(streetOrPlace) + " " + encodeHTML(housenumber) + ", " + encodeHTML(postcode) + " " + encodeHTML(city) + " (" + encodeHTML(country) + ")"
-                    )
-                            .setIcon(JOptionPane.INFORMATION_MESSAGE)
-                            .show();
-                } else {
-                    new Notification(
-                            "<strong>" + tr("Austria Address Helper") + "</strong><br />" +
-                            tr("No address was found for this object.")
-                    )
-                            .setIcon(JOptionPane.ERROR_MESSAGE)
-                            .show();
-                }
-
-                noExceptionThrown = true;
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-                exception = e;
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-                exception = e;
-            } catch (IOException e) {
-                e.printStackTrace();
-                exception = e;
-            } finally {
-                if (!noExceptionThrown) {
-                    new Notification(
-                            "<strong>" + tr("Austria Address Helper") + "</strong>" +
-                            tr("An unexpected exception occurred:") + exception.toString()
-                    )
-                            .setIcon(JOptionPane.ERROR_MESSAGE)
-                            .show();
-                }
-            }
+        	OsmPrimitive newObject = loadAddress(selectedObject);
+        	if(newObject != null){
+        		commands.add(new ChangeCommand(selectedObject, newObject));
+        	}
         }
         if (!commands.isEmpty()) {
             Main.main.undoRedo.add(new SequenceCommand(trn("Add address", "Add addresses", commands.size()), commands));
         }
+    }
+    
+    public static OsmPrimitive loadAddress(OsmPrimitive selectedObject){
+        boolean noExceptionThrown = false;
+        Exception exception = null;
+
+        LatLon center = selectedObject.getBBox().getCenter();
+
+        try {
+            URL url = new URL(baseUrl
+                    + "?lat=" + URLEncoder.encode(center.latToString(CoordinateFormat.DECIMAL_DEGREES), "UTF-8")
+                    + "&lon=" + URLEncoder.encode(center.lonToString(CoordinateFormat.DECIMAL_DEGREES), "UTF-8")
+                    + "&distance=30"
+                    + "&limit=1"
+                    + "&epsg=4326"
+            );
+
+            final JsonObject json;
+            try (BufferedReader in = HttpClient.create(url)
+                    .setReasonForRequest("JOSM Plugin Austria Address Helper v1.0")
+                    .setHeader("User-Agent", "JOSM Plugin Austria Address Helper v1.0")
+                    .connect()
+                    .getContentReader();
+                 JsonReader reader = Json.createReader(in)) {
+                json = reader.readObject();
+            }
+
+            final JsonArray addressItems = json.getJsonArray("results");
+            if (addressItems.size() > 0) {
+                final JsonObject firstAddress = addressItems.getJsonObject(0);
+
+                String country = "AT";
+                String city = firstAddress.getString("municipality");
+                String postcode = firstAddress.getString("postcode");
+                String streetOrPlace;
+                String housenumber = firstAddress.getString("house_number");
+
+                final OsmPrimitive newObject = selectedObject instanceof Node
+                        ? new Node(((Node) selectedObject))
+                        : selectedObject instanceof Way
+                        ? new Way((Way) selectedObject)
+                        : selectedObject instanceof Relation
+                        ? new Relation((Relation) selectedObject)
+                        : null;
+                newObject.put("addr:country", country);
+                newObject.put("addr:city", city);
+                newObject.put("addr:postcode", postcode);
+
+                if ((firstAddress.get("address_type")).equals("place")) {
+                    streetOrPlace = firstAddress.getString("street");
+                    newObject.put("addr:place", streetOrPlace);
+                } else {
+                    streetOrPlace = firstAddress.getString("street");
+                    newObject.put("addr:street", streetOrPlace);
+                }
+
+                newObject.put("addr:housenumber", housenumber);
+
+                // Set or add the address source.
+                final String copyright = "Adressdaten: " + json.getString("copyright");
+                String source = selectedObject.get("source");
+
+                if (source == null) {
+                    newObject.put("source", copyright);
+                } else if (!source.contains(copyright)) {
+                    newObject.put("source", source + "; " + copyright);
+                }
+
+                
+
+                new Notification(
+                        "<strong>" + tr("Austria Address Helper") + "</strong><br />" +
+                        tr("Successfully added address to selected object:") + "<br />" +
+                        encodeHTML(streetOrPlace) + " " + encodeHTML(housenumber) + ", " + encodeHTML(postcode) + " " + encodeHTML(city) + " (" + encodeHTML(country) + ")"
+                )
+                        .setIcon(JOptionPane.INFORMATION_MESSAGE)
+                        .show();
+                noExceptionThrown = true;
+                return newObject;
+            } else {
+                new Notification(
+                        "<strong>" + tr("Austria Address Helper") + "</strong><br />" +
+                        tr("No address was found for this object.")
+                )
+                        .setIcon(JOptionPane.ERROR_MESSAGE)
+                        .show();
+            }
+
+            noExceptionThrown = true;
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            exception = e;
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            exception = e;
+        } catch (IOException e) {
+            e.printStackTrace();
+            exception = e;
+        } finally {
+            if (!noExceptionThrown) {
+                new Notification(
+                        "<strong>" + tr("Austria Address Helper") + "</strong>" +
+                        tr("An unexpected exception occurred:") + exception.toString()
+                )
+                        .setIcon(JOptionPane.ERROR_MESSAGE)
+                        .show();
+            }
+        }
+        return null;
+
     }
 
     private static String encodeHTML(String s)
