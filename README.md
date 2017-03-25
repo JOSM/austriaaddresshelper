@@ -18,7 +18,7 @@ The data source is the [address data set of the Austrian Federal Office for Cali
 Eich- und Vermessungswesen)](http://www.bev.gv.at/portal/page?_pageid=713,2168079&_dad=portal&_schema=PORTAL) (see
 section "Unentgeltliche Produkte").
 
-    Data: © Österreichisches Adressregister, Stichtagsdaten vom 02.10.2016
+    Data: © Österreichisches Adressregister 2017, N 23806/2017
     
-There is also a [written permission for the OpenStreetMap project](https://lists.openstreetmap.org/pipermail/talk-at/2016-November/008596.html)
-to use the data with this plugin.
+There is also a [written permission for the OpenStreetMap project](https://wiki.openstreetmap.org/wiki/WikiProject_Austria/%C3%96sterreichisches_Adressregister)
+to use the data.
