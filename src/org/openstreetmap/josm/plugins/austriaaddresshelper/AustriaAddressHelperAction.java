@@ -136,15 +136,9 @@ public class AustriaAddressHelperAction extends JosmAction {
 
                 // Set or add the address source.
                 final String copyright = "Adressdaten: " + json.getString("copyright");
-                String source = selectedObject.get("source");
 
-                if (source == null) {
-                    newObject.put("source", copyright);
-                } else if (!source.contains(copyright)) {
-                    newObject.put("source", source + "; " + copyright);
-                }
-
-                
+                // Add the data source to the changeset (not to the object because that can be changed easily).
+                Main.getLayerManager().getEditDataSet().addChangeSetTag("source", copyright);
 
                 new Notification(
                         "<strong>" + tr("Austria Address Helper") + "</strong><br />" +
