@@ -45,7 +45,7 @@ public class AustriaAddressHelperAction extends JosmAction {
     public AustriaAddressHelperAction() {
         super(tr("Fetch Address"), new ImageProvider("icon.png"), tr("Fetch Address"),
                 Shortcut.registerShortcut("Fetch Address", tr("Fetch Address"),
-                        KeyEvent.VK_B, Shortcut.ALT_CTRL), false, "fetchAddress",
+                        KeyEvent.VK_A, Shortcut.ALT_CTRL), false, "fetchAddress",
                 false);
     }
 
