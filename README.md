@@ -8,7 +8,7 @@ web service uses the address data sets released by the Bundesamt für Eich- und 
 ![Screenshot of JOSM Austria Address Helper](doc/screenshot.png)
 
 To use it, simply activate the ``austriaaddresshelper`` plugin in the JOSM preferences dialog. In order to assign an
-address to an object in Austria, press **Strg + Alt + B** (Linux, Windows) / **⌥ ⌘ + B** (macOS) or simply use the
+address to an object in Austria, press **Ctrl + Alt + A** (Linux, Windows) / **⌥ ⌘ + A** (macOS) or simply use the
 "Fetch Address" menu item from the "Tools" menu.
 
 Data Source And Permission
