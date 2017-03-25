@@ -130,6 +130,10 @@ public class AustriaAddressHelperAction extends JosmAction {
 
                 newObject.put("addr:housenumber", housenumber);
 
+                // Set the date of the data source.
+                final String addressDate = json.getString("address_date");
+                newObject.put("at_bev:addr_date", addressDate);
+
                 // Set or add the address source.
                 final String copyright = "Adressdaten: " + json.getString("copyright");
                 String source = selectedObject.get("source");
