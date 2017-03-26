@@ -46,7 +46,7 @@ public class AustriaAddressHelperAction extends JosmAction {
         super(tr("Fetch Address"), new ImageProvider("icon.png"), tr("Fetch Address"),
                 Shortcut.registerShortcut("Fetch Address", tr("Fetch Address"),
                         KeyEvent.VK_A, Shortcut.CTRL_SHIFT), false, "fetchAddress",
-                false);
+                true);
     }
 
     @Override
@@ -180,6 +180,21 @@ public class AustriaAddressHelperAction extends JosmAction {
         }
         return null;
 
+    }
+
+    @Override
+    protected void updateEnabledState() {
+        if (getLayerManager().getEditDataSet() == null) {
+            setEnabled(false);
+        } else {
+            updateEnabledState(getLayerManager().getEditDataSet().getSelected());
+        }
+    }
+
+    @Override
+    protected void updateEnabledState(final Collection<? extends OsmPrimitive> selection) {
+        // Enable it only if exactly one object is selected.
+        setEnabled(selection != null && selection.size() == 1);
     }
 
     private static String encodeHTML(String s)
