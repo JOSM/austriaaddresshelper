@@ -11,7 +11,7 @@
     -->
     <property name="plugin.author" value="Thomas Konrad"/>
     <property name="plugin.class" value="org.openstreetmap.josm.plugins.austriaaddresshelper.AustriaAddressHelperPlugin"/>
-    <property name="plugin.description" value="Automatically assigns addresses to selected objects in Austria. Data (c) Österreichisches Adressregister."/>
+    <property name="plugin.description" value="Automatically assigns the address to a selected object in Austria. Data © Österreichisches Adressregister 2017, N 23806/2017."/>
     <property name="plugin.icon" value="images/icon.png"/>
     <property name="plugin.link" value="http://wiki.openstreetmap.org/wiki/JOSM/Plugins/AustriaAddressHelper"/>
     <!--<property name="plugin.early" value="..."/>-->
