@@ -29,6 +29,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -140,12 +141,18 @@ public class AustriaAddressHelperAction extends JosmAction {
                 // Add the data source to the changeset (not to the object because that can be changed easily).
                 Main.getLayerManager().getEditDataSet().addChangeSetTag("source", copyright);
 
+                // Get the distance between the building center and the address coordinates.
+                final double distanceToAddressCoordinates = firstAddress.getJsonNumber("distance").doubleValue();
+
                 new Notification(
                         "<strong>" + tr("Austria Address Helper") + "</strong><br />" +
                         tr("Successfully added address to selected object:") + "<br />" +
-                        encodeHTML(streetOrPlace) + " " + encodeHTML(housenumber) + ", " + encodeHTML(postcode) + " " + encodeHTML(city) + " (" + encodeHTML(country) + ")"
+                        encodeHTML(streetOrPlace) + " " + encodeHTML(housenumber) + ", " + encodeHTML(postcode) + " " + encodeHTML(city) + " (" + encodeHTML(country) + ")<br/>" +
+                        "<strong>" + tr("Distance between building center and address coordinates:") + "</strong> " +
+                        new DecimalFormat("#.##").format(distanceToAddressCoordinates) + " " + tr("meters")
                 )
                         .setIcon(JOptionPane.INFORMATION_MESSAGE)
+                        .setDuration(2500)
                         .show();
                 noExceptionThrown = true;
                 return newObject;
@@ -166,6 +173,9 @@ public class AustriaAddressHelperAction extends JosmAction {
             e.printStackTrace();
             exception = e;
         } catch (IOException e) {
+            e.printStackTrace();
+            exception = e;
+        } catch (NullPointerException e) {
             e.printStackTrace();
             exception = e;
         } finally {
