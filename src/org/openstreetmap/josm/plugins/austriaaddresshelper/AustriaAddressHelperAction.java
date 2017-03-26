@@ -45,7 +45,7 @@ public class AustriaAddressHelperAction extends JosmAction {
     public AustriaAddressHelperAction() {
         super(tr("Fetch Address"), new ImageProvider("icon.png"), tr("Fetch Address"),
                 Shortcut.registerShortcut("Fetch Address", tr("Fetch Address"),
-                        KeyEvent.VK_A, Shortcut.ALT_CTRL), false, "fetchAddress",
+                        KeyEvent.VK_A, Shortcut.CTRL_SHIFT), false, "fetchAddress",
                 false);
     }
 
@@ -91,8 +91,8 @@ public class AustriaAddressHelperAction extends JosmAction {
 
             final JsonObject json;
             try (BufferedReader in = HttpClient.create(url)
-                    .setReasonForRequest("JOSM Plugin Austria Address Helper v1.0")
-                    .setHeader("User-Agent", "JOSM Plugin Austria Address Helper v1.0")
+                    .setReasonForRequest("JOSM Plugin Austria Address Helper v0.3.2")
+                    .setHeader("User-Agent", "JOSM Plugin Austria Address Helper v0.3.2")
                     .connect()
                     .getContentReader();
                  JsonReader reader = Json.createReader(in)) {
