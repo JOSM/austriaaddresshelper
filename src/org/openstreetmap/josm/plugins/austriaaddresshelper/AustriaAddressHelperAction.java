@@ -121,7 +121,7 @@ public class AustriaAddressHelperAction extends JosmAction {
                 newObject.put("addr:city", city);
                 newObject.put("addr:postcode", postcode);
 
-                if ((firstAddress.get("address_type")).equals("place")) {
+                if ((firstAddress.getString("address_type")).equals("place")) {
                     streetOrPlace = firstAddress.getString("street");
                     newObject.put("addr:place", streetOrPlace);
                 } else {
