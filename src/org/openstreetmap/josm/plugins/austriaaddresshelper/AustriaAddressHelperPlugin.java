@@ -23,6 +23,7 @@ public class AustriaAddressHelperPlugin extends Plugin {
         MainMenu.add(Main.main.menu.toolsMenu, austriaAddressHelperAction);
     }
 
+    @Override
     public void mapFrameInitialized(MapFrame oldFrame, MapFrame newFrame) {
 
     }
