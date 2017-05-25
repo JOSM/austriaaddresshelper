@@ -30,9 +30,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
 import static org.openstreetmap.josm.tools.I18n.trn;
@@ -41,7 +39,10 @@ import static org.openstreetmap.josm.tools.I18n.trn;
  * Created by tom on 02/08/15.
  */
 public class AustriaAddressHelperAction extends JosmAction {
-    static final String baseUrl = "https://bev-reverse-geocoder.thomaskonrad.at/reverse-geocode/json";
+    static final String baseUrl = "http://127.0.0.1:8000/reverse-geocode/json";
+    static boolean addressTypeDialogCanceled = false;
+
+    protected static HashMap<HashMap<String, String>, String> rememberedAddressTypeChoices = new HashMap<>();
 
     public AustriaAddressHelperAction() {
         super(tr("Fetch Address"), new ImageProvider("icon.png"), tr("Fetch Address"),
@@ -108,7 +109,7 @@ public class AustriaAddressHelperAction extends JosmAction {
                 String city = firstAddress.getString("municipality");
                 String postcode = firstAddress.getString("postcode");
                 String streetOrPlace;
-                String housenumber = firstAddress.getString("house_number");
+                String houseNumber = firstAddress.getString("house_number");
 
                 final OsmPrimitive newObject = selectedObject instanceof Node
                         ? new Node(((Node) selectedObject))
@@ -121,15 +122,39 @@ public class AustriaAddressHelperAction extends JosmAction {
                 newObject.put("addr:city", city);
                 newObject.put("addr:postcode", postcode);
 
+                streetOrPlace = firstAddress.getString("street");
+
+                // First remove addr:street and addr:place tags.
+                newObject.remove("addr:street");
+                newObject.remove("addr:place");
+
+                // Decide whether the address type is 'street' or 'place'.
                 if ((firstAddress.getString("address_type")).equals("place")) {
-                    streetOrPlace = firstAddress.getString("street");
                     newObject.put("addr:place", streetOrPlace);
-                } else {
-                    streetOrPlace = firstAddress.getString("street");
+                } else if ((firstAddress.getString("address_type")).equals("street")) {
                     newObject.put("addr:street", streetOrPlace);
+                } else {
+                    // Get remembered choice or ask the user.
+                    String addressType = getRememberedAddressTypeOrAsk(streetOrPlace, houseNumber, postcode, city);
+
+                    // If the address type is neither "street" nor "place", show a warning and return.
+                    if (addressType == null || !AddressTypeDialog.ALLOWED_ADDRESS_TYPES.contains(addressType)) {
+                        new Notification(
+                                "<strong>" + tr("Austria Address Helper") + "</strong><br />" +
+                                        tr("No address type selected. Aborting.")
+                        )
+                                .setIcon(JOptionPane.WARNING_MESSAGE)
+                                .setDuration(2500)
+                                .show();
+
+                        noExceptionThrown = true;
+                        return null;
+                    } else {
+                        newObject.put("addr:" + addressType, streetOrPlace);
+                    }
                 }
 
-                newObject.put("addr:housenumber", housenumber);
+                newObject.put("addr:housenumber", houseNumber);
 
                 // Set the date of the data source.
                 final String addressDate = json.getString("address_date");
@@ -147,7 +172,7 @@ public class AustriaAddressHelperAction extends JosmAction {
                 new Notification(
                         "<strong>" + tr("Austria Address Helper") + "</strong><br />" +
                         tr("Successfully added address to selected object:") + "<br />" +
-                        encodeHTML(streetOrPlace) + " " + encodeHTML(housenumber) + ", " + encodeHTML(postcode) + " " + encodeHTML(city) + " (" + encodeHTML(country) + ")<br/>" +
+                        encodeHTML(streetOrPlace) + " " + encodeHTML(houseNumber) + ", " + encodeHTML(postcode) + " " + encodeHTML(city) + " (" + encodeHTML(country) + ")<br/>" +
                         "<strong>" + tr("Distance between building center and address coordinates:") + "</strong> " +
                         new DecimalFormat("#.##").format(distanceToAddressCoordinates) + " " + tr("meters")
                 )
@@ -192,6 +217,36 @@ public class AustriaAddressHelperAction extends JosmAction {
 
     }
 
+    protected static String getRememberedAddressTypeOrAsk(String streetOrPlace, String houseNumber, String postcode, String city) {
+        String addressType;
+
+        // First, we'll look if there is a remembered choice for that place, postcode and city.
+        String rememberedAddressType = getRememberedChoice(streetOrPlace, postcode, city);
+
+        if (rememberedAddressType != null) {
+            return rememberedAddressType;
+        }
+
+        // No remembered address type. Show the address type dialog and let the user decide.
+        AddressTypeDialog dialog = new AddressTypeDialog(streetOrPlace, houseNumber, postcode, city);
+        dialog.showDialog();
+
+        // "OK" was not clicked
+        if (dialog.getValue() != 1) {
+            return null;
+        }
+
+        addressType = dialog.getAddressType();
+
+        // The user has chosen to remember the address type, so store it for this session.
+        if (dialog.rememberChoice() && addressType != null && AddressTypeDialog.ALLOWED_ADDRESS_TYPES.contains(addressType)) {
+            // The user wants the choice to be remembered. Add the choice to the list of remembered choices.
+            rememberedAddressTypeChoices.put(dialog.getRememberedChoice(), dialog.getAddressType());
+        }
+
+        return addressType;
+    }
+
     @Override
     protected void updateEnabledState() {
         if (getLayerManager().getEditDataSet() == null) {
@@ -223,5 +278,14 @@ public class AustriaAddressHelperAction extends JosmAction {
             }
         }
         return out.toString();
+    }
+
+    private static String getRememberedChoice(String placeName, String postcode, String city) {
+        HashMap<String, String> place = new HashMap<>();
+        place.put("place_name", placeName);
+        place.put("postcode", postcode);
+        place.put("city", city);
+
+        return rememberedAddressTypeChoices.get(place);
     }
 }

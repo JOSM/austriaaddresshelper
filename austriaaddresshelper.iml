@@ -7,9 +7,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="josm-custom" level="project" />
-    <orderEntry type="module" module-name="test11" />
+    <orderEntry type="module" module-name="test12" />
     <orderEntry type="module" module-name="core" />
-    <orderEntry type="library" name="genson-1.3" level="project" />
   </component>
 </module>
