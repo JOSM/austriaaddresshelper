@@ -39,7 +39,7 @@ import static org.openstreetmap.josm.tools.I18n.trn;
  * Created by tom on 02/08/15.
  */
 public class AustriaAddressHelperAction extends JosmAction {
-    static final String baseUrl = "http://127.0.0.1:8000/reverse-geocode/json";
+    static final String baseUrl = "https://bev-reverse-geocoder.thomaskonrad.at/reverse-geocode/json";
     static boolean addressTypeDialogCanceled = false;
 
     protected static HashMap<HashMap<String, String>, String> rememberedAddressTypeChoices = new HashMap<>();
