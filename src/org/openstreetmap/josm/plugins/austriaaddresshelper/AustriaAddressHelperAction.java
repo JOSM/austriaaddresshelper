@@ -93,8 +93,8 @@ public class AustriaAddressHelperAction extends JosmAction {
 
             final JsonObject json;
             try (BufferedReader in = HttpClient.create(url)
-                    .setReasonForRequest("JOSM Plugin Austria Address Helper v0.3.2")
-                    .setHeader("User-Agent", "JOSM Plugin Austria Address Helper v0.3.2")
+                    .setReasonForRequest("JOSM Plugin Austria Address Helper")
+                    .setHeader("User-Agent", "JOSM Plugin Austria Address Helper")
                     .connect()
                     .getContentReader();
                  JsonReader reader = Json.createReader(in)) {
@@ -106,7 +106,8 @@ public class AustriaAddressHelperAction extends JosmAction {
                 final JsonObject firstAddress = addressItems.getJsonObject(0);
 
                 String country = "AT";
-                String city = firstAddress.getString("municipality");
+                String municipality = firstAddress.getString("municipality");
+                String locality = firstAddress.getString("locality");
                 String postcode = firstAddress.getString("postcode");
                 String streetOrPlace;
                 String houseNumber = firstAddress.getString("house_number");
@@ -118,8 +119,18 @@ public class AustriaAddressHelperAction extends JosmAction {
                         : selectedObject instanceof Relation
                         ? new Relation((Relation) selectedObject)
                         : null;
+
                 newObject.put("addr:country", country);
-                newObject.put("addr:city", city);
+
+                // Some municipalities have a specific combination of postcode and street distributed over multiple
+                // localities (see Amstetten, for example). If this is the case, we need to set the "addr:city" tag to
+                // the value of the locality and not the municipality so that the address is unique.
+                if (firstAddress.getBoolean("municipality_has_ambiguous_addresses")) {
+                    newObject.put("addr:city", locality);
+                } else {
+                    newObject.put("addr:city", municipality);
+                }
+
                 newObject.put("addr:postcode", postcode);
 
                 streetOrPlace = firstAddress.getString("street");
@@ -135,7 +146,7 @@ public class AustriaAddressHelperAction extends JosmAction {
                     newObject.put("addr:street", streetOrPlace);
                 } else {
                     // Get remembered choice or ask the user.
-                    String addressType = getRememberedAddressTypeOrAsk(streetOrPlace, houseNumber, postcode, city);
+                    String addressType = getRememberedAddressTypeOrAsk(streetOrPlace, houseNumber, postcode, municipality);
 
                     // If the address type is neither "street" nor "place", show a warning and return.
                     if (addressType == null || !AddressTypeDialog.ALLOWED_ADDRESS_TYPES.contains(addressType)) {
@@ -172,7 +183,7 @@ public class AustriaAddressHelperAction extends JosmAction {
                 new Notification(
                         "<strong>" + tr("Austria Address Helper") + "</strong><br />" +
                         tr("Successfully added address to selected object:") + "<br />" +
-                        encodeHTML(streetOrPlace) + " " + encodeHTML(houseNumber) + ", " + encodeHTML(postcode) + " " + encodeHTML(city) + " (" + encodeHTML(country) + ")<br/>" +
+                        encodeHTML(streetOrPlace) + " " + encodeHTML(houseNumber) + ", " + encodeHTML(postcode) + " " + encodeHTML(municipality) + " (" + encodeHTML(country) + ")<br/>" +
                         "<strong>" + tr("Distance between building center and address coordinates:") + "</strong> " +
                         new DecimalFormat("#.##").format(distanceToAddressCoordinates) + " " + tr("meters")
                 )
