@@ -122,9 +122,13 @@ public class AustriaAddressHelperAction extends JosmAction {
 
                 newObject.put("addr:country", country);
 
-                // Some municipalities have a specific combination of postcode and street distributed over multiple
-                // localities (see Amstetten, for example). If this is the case, we need to set the "addr:city" tag to
-                // the value of the locality and not the municipality so that the address is unique.
+                // Some municipalities have a specific combination of postcode and street multiple times in several
+                // localities. For example, the street "Feldgasse" in the municipality of Großebersdorf with the
+                // the postcode 2203 exists four times, namely in the localities Eibesbrunn, Großebersdorf,
+                // Manhartsbrunn, and Putzing. If this is the case, we need to set the "addr:city" tag to the value of
+                // the locality and not the municipality so that the address is unique. If there is one such case in a
+                // municipality, all addresses in the municipality have the locality in the addr:city tag (such
+                // municipalities get the attribute "municipality_has_ambiguous_addresses").
                 if (firstAddress.getBoolean("municipality_has_ambiguous_addresses")) {
                     newObject.put("addr:city", locality);
                 } else {
