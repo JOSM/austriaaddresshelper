@@ -1,6 +1,28 @@
 package org.openstreetmap.josm.plugins.austriaaddresshelper;
 
-import org.openstreetmap.josm.Main;
+import static org.openstreetmap.josm.tools.I18n.tr;
+import static org.openstreetmap.josm.tools.I18n.trn;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.swing.JOptionPane;
+
 import org.openstreetmap.josm.actions.JosmAction;
 import org.openstreetmap.josm.command.ChangeCommand;
 import org.openstreetmap.josm.command.Command;
@@ -11,29 +33,11 @@ import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.Way;
+import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.tools.HttpClient;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Shortcut;
-
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.text.DecimalFormat;
-import java.util.*;
-
-import static org.openstreetmap.josm.tools.I18n.tr;
-import static org.openstreetmap.josm.tools.I18n.trn;
 
 /**
  * Created by tom on 02/08/15.
@@ -54,7 +58,7 @@ public class AustriaAddressHelperAction extends JosmAction {
     @Override
     public void actionPerformed(ActionEvent event) {
         // Get the currently selected object
-        final Collection<OsmPrimitive> sel = Main.getLayerManager().getEditDataSet().getSelected();
+        final Collection<OsmPrimitive> sel = MainApplication.getLayerManager().getEditDataSet().getSelected();
 
         if (sel.size() != 1) {
             new Notification(tr("Austria Address Helper<br>Please select exactly one object."))
@@ -72,7 +76,7 @@ public class AustriaAddressHelperAction extends JosmAction {
         	}
         }
         if (!commands.isEmpty()) {
-            Main.main.undoRedo.add(new SequenceCommand(trn("Add address", "Add addresses", commands.size()), commands));
+            MainApplication.undoRedo.add(new SequenceCommand(trn("Add address", "Add addresses", commands.size()), commands));
         }
     }
     
@@ -179,7 +183,7 @@ public class AustriaAddressHelperAction extends JosmAction {
                 final String copyright = "Adressdaten: " + json.getString("copyright");
 
                 // Add the data source to the changeset (not to the object because that can be changed easily).
-                Main.getLayerManager().getEditDataSet().addChangeSetTag("source", copyright);
+                MainApplication.getLayerManager().getEditDataSet().addChangeSetTag("source", copyright);
 
                 // Get the distance between the building center and the address coordinates.
                 final double distanceToAddressCoordinates = firstAddress.getJsonNumber("distance").doubleValue();

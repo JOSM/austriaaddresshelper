@@ -1,10 +1,10 @@
 package org.openstreetmap.josm.plugins.austriaaddresshelper;
 
-import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MainMenu;
+import org.openstreetmap.josm.gui.MapFrame;
 import org.openstreetmap.josm.plugins.Plugin;
 import org.openstreetmap.josm.plugins.PluginInformation;
-import org.openstreetmap.josm.gui.MapFrame;
 
 public class AustriaAddressHelperPlugin extends Plugin {
 
@@ -20,7 +20,7 @@ public class AustriaAddressHelperPlugin extends Plugin {
         // init your plugin
 
         austriaAddressHelperAction = new AustriaAddressHelperAction();
-        MainMenu.add(Main.main.menu.toolsMenu, austriaAddressHelperAction);
+        MainMenu.add(MainApplication.getMenu().toolsMenu, austriaAddressHelperAction);
     }
 
     @Override
