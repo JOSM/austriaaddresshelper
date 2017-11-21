@@ -27,8 +27,8 @@ import org.openstreetmap.josm.actions.JosmAction;
 import org.openstreetmap.josm.command.ChangeCommand;
 import org.openstreetmap.josm.command.Command;
 import org.openstreetmap.josm.command.SequenceCommand;
-import org.openstreetmap.josm.data.coor.CoordinateFormat;
 import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.data.coor.conversion.DecimalDegreesCoordinateFormat;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
@@ -88,8 +88,8 @@ public class AustriaAddressHelperAction extends JosmAction {
 
         try {
             URL url = new URL(baseUrl
-                    + "?lat=" + URLEncoder.encode(center.latToString(CoordinateFormat.DECIMAL_DEGREES), "UTF-8")
-                    + "&lon=" + URLEncoder.encode(center.lonToString(CoordinateFormat.DECIMAL_DEGREES), "UTF-8")
+                    + "?lat=" + URLEncoder.encode(DecimalDegreesCoordinateFormat.INSTANCE.latToString(center), "UTF-8")
+                    + "&lon=" + URLEncoder.encode(DecimalDegreesCoordinateFormat.INSTANCE.lonToString(center), "UTF-8")
                     + "&distance=30"
                     + "&limit=1"
                     + "&epsg=4326"
