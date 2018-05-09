@@ -12,17 +12,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.swing.JOptionPane;
+import javax.json.*;
+import javax.swing.*;
 
+import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.JosmAction;
 import org.openstreetmap.josm.command.ChangeCommand;
 import org.openstreetmap.josm.command.Command;
@@ -47,6 +42,11 @@ public class AustriaAddressHelperAction extends JosmAction {
     static boolean addressTypeDialogCanceled = false;
 
     protected static HashMap<HashMap<String, String>, String> rememberedAddressTypeChoices = new HashMap<>();
+    protected static String[] tagsToCheckForDuplicates = {"addr:city", "addr:postcode", "addr:place", "addr:street", "addr:hamlet", "addr:housenumber"};
+    protected static String[] streetTypeTags = {"addr:street", "addr:place", "addr:hamlet", "addr:suburb"};
+    protected static String[] objectTypesToCheckforDuplicates = {"way", "node", "relation"};
+    protected static String streetTypeTagPlaceholder = "___street_type_tag___";
+    protected static String overpassBaseUrl = "https://overpass-api.de/api/interpreter";
 
     public AustriaAddressHelperAction() {
         super(tr("Fetch Address"), new ImageProvider("icon.png"), tr("Fetch Address"),
@@ -175,31 +175,78 @@ public class AustriaAddressHelperAction extends JosmAction {
 
                 newObject.put("addr:housenumber", houseNumber);
 
-                // Set the date of the data source.
-                final String addressDate = json.getString("address_date");
-                newObject.put("at_bev:addr_date", addressDate);
+                // Search for duplicates.
+                ArrayList<String> existingObjectsWithThatAddress = getUrlsOfObjectsWithThatAddress(newObject, center);
 
-                // Set or add the address source.
-                final String copyright = "Adressdaten: " + json.getString("copyright");
+                int dialogAnswer = -2;
 
-                // Add the data source to the changeset (not to the object because that can be changed easily).
-                MainApplication.getLayerManager().getEditDataSet().addChangeSetTag("source", copyright);
+                if (existingObjectsWithThatAddress == null) {
+                    dialogAnswer = JOptionPane.showOptionDialog(Main.parent, tr("Unable to check whether this address already exists in OpenStreetMap: Continue anyway?"), tr("Address Duplicate Check Failed"),
+                            JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, null, null);
+                } else if (existingObjectsWithThatAddress.size() > 0) {
+                    StringBuilder urlList = new StringBuilder();
+                    urlList.append("<ul>");
 
-                // Get the distance between the building center and the address coordinates.
-                final double distanceToAddressCoordinates = firstAddress.getJsonNumber("distance").doubleValue();
+                    for (String duplicateUrl: existingObjectsWithThatAddress) {
+                        urlList.append("<li><a href=\"");
+                        urlList.append(encodeHTML(duplicateUrl));
+                        urlList.append("\">");
+                        urlList.append(encodeHTML(duplicateUrl));
+                        urlList.append("</a></li>");
+                    }
 
-                new Notification(
-                        "<strong>" + tr("Austria Address Helper") + "</strong><br />" +
-                        tr("Successfully added address to selected object:") + "<br />" +
-                        encodeHTML(streetOrPlace) + " " + encodeHTML(houseNumber) + ", " + encodeHTML(postcode) + " " + encodeHTML(municipality) + " (" + encodeHTML(country) + ")<br/>" +
-                        "<strong>" + tr("Distance between building center and address coordinates:") + "</strong> " +
-                        new DecimalFormat("#.##").format(distanceToAddressCoordinates) + " " + tr("meters")
-                )
-                        .setIcon(JOptionPane.INFORMATION_MESSAGE)
-                        .setDuration(2500)
-                        .show();
-                noExceptionThrown = true;
-                return newObject;
+                    urlList.append("</ul>");
+
+                    Object[] options = { tr("Yes"), tr("No") };
+
+                    dialogAnswer = JOptionPane.showOptionDialog(
+                            Main.parent,
+                            new MessageWithLink(
+                                    tr("The following objects in OpenStreetMap already have this address:") +
+                                    urlList.toString() +
+                                    tr("Are you sure that you want to add it?")
+                            ),
+                            tr("Duplicate Address"),
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.WARNING_MESSAGE,
+                            null,
+                            options,
+                            options[1]
+                    );
+                }
+
+                // Either no dialog was shown or "yes" was selected.
+                if (dialogAnswer == -2 || dialogAnswer == JOptionPane.YES_OPTION) {
+                    // Set the date of the data source.
+                    final String addressDate = json.getString("address_date");
+                    newObject.put("at_bev:addr_date", addressDate);
+
+                    // Set or add the address source.
+                    final String copyright = "Adressdaten: " + json.getString("copyright");
+
+                    // Add the data source to the changeset (not to the object because that can be changed easily).
+                    MainApplication.getLayerManager().getEditDataSet().addChangeSetTag("source", copyright);
+
+                    // Get the distance between the building center and the address coordinates.
+                    final double distanceToAddressCoordinates = firstAddress.getJsonNumber("distance").doubleValue();
+
+                    new Notification(
+                            "<strong>" + tr("Austria Address Helper") + "</strong><br />" +
+                                    tr("Successfully added address to selected object:") + "<br />" +
+                                    encodeHTML(streetOrPlace) + " " + encodeHTML(houseNumber) + ", " + encodeHTML(postcode) + " " + encodeHTML(municipality) + " (" + encodeHTML(country) + ")<br/>" +
+                                    "<strong>" + tr("Distance between building center and address coordinates:") + "</strong> " +
+                                    new DecimalFormat("#.##").format(distanceToAddressCoordinates) + " " + tr("meters")
+                    )
+                            .setIcon(JOptionPane.INFORMATION_MESSAGE)
+                            .setDuration(2500)
+                            .show();
+                    noExceptionThrown = true;
+
+                    return newObject;
+                } else {
+                    noExceptionThrown = true;
+                    return null;
+                }
             } else {
                 new Notification(
                         "<strong>" + tr("Austria Address Helper") + "</strong><br />" +
@@ -232,8 +279,128 @@ public class AustriaAddressHelperAction extends JosmAction {
                         .show();
             }
         }
-        return null;
 
+        return null;
+    }
+
+    protected static ArrayList<String> getUrlsOfObjectsWithThatAddress(OsmPrimitive newObject, LatLon position) {
+        ArrayList<String> urls = new ArrayList<>();
+
+        final String header = "[out:json][timeout:10]";
+
+        // Just a rough bounding box.
+        String bbox ="[bbox:" +
+                (position.getY() - 0.075) + "," +
+                (position.getX() - 0.1  ) + "," +
+                (position.getY() + 0.075) + "," +
+                (position.getX() + 0.1  ) + "]";
+
+        StringBuilder filterLineBuilder = new StringBuilder();
+
+        // Iterate over all tags of the new object.
+        for (String key: newObject.keySet()) {
+            String value = newObject.get(key);
+
+            // Only filter for relevant tags.
+            if (Arrays.asList(tagsToCheckForDuplicates).contains(key)) {
+                filterLineBuilder.append("[\"");
+
+                String tagName;
+
+                // If it is one of addr:street, addr:place, addr:hamlet, etc., we'll put a placeholder and repeat all
+                // three in the later filter. This is because it is not quite clear every time which of those tags fits
+                // best.
+                if (Arrays.asList(streetTypeTags).contains(key)) {
+                    tagName = streetTypeTagPlaceholder;
+                } else {
+                    tagName = key;
+                }
+
+                filterLineBuilder.append(tagName.replaceAll("\"", "\\\\\"")); // Escape double quotes
+
+                filterLineBuilder.append("\"=\"");
+                filterLineBuilder.append(value.replaceAll("\"", "\\\\\"")); // Escape double quotes
+                filterLineBuilder.append("\"]");
+            }
+        }
+
+        String filterLine = filterLineBuilder.toString();
+
+        StringBuilder filterBuilder = new StringBuilder();
+
+        // Iterate over all object types and street-type tags and build all combinations.
+        for (String streetTypeTag: streetTypeTags) {
+            for (String objectType: objectTypesToCheckforDuplicates) {
+                filterBuilder.append(objectType);
+                filterBuilder.append(filterLine.replaceAll(streetTypeTagPlaceholder, streetTypeTag));
+                filterBuilder.append(";");
+            }
+        }
+
+        String filter = filterBuilder.toString();
+
+        final String footer = "out body;";
+
+        // Build the whole Overpass API query.
+        String query = header + bbox + ";" + "(" + filter + ");" + footer;
+
+        boolean noExceptionThrown = false;
+        Exception exception = null;
+
+        try {
+            URL url = new URL(overpassBaseUrl
+                    + "?data=" + URLEncoder.encode(query, "UTF-8")
+            );
+
+            final JsonObject json;
+
+            try (BufferedReader in = HttpClient.create(url)
+                    .setReasonForRequest("JOSM Plugin Austria Address Helper")
+                    .setHeader("User-Agent", "JOSM Plugin Austria Address Helper")
+                    .connect()
+                    .getContentReader();
+                JsonReader reader = Json.createReader(in)) {
+                json = reader.readObject();
+            }
+
+            final JsonArray items = json.getJsonArray("elements");
+
+            if (items.size() > 0) {
+                for (JsonValue item: items) {
+                    JsonObject itemObject = item.asJsonObject();
+
+                    try {
+                        String type = itemObject.getString("type");
+                        int osmId = itemObject.getInt("id");
+
+                        urls.add("https://www.openstreetmap.org/" + URLEncoder.encode(type, "UTF-8") + "/" + URLEncoder.encode(Integer.toString(osmId), "UTF-8"));
+                    } catch (NullPointerException e) {
+                        urls.add("<Could not generate URL>");
+                    }
+                }
+            }
+
+            noExceptionThrown = true;
+        } catch (MalformedURLException | UnsupportedEncodingException | NullPointerException e) {
+            e.printStackTrace();
+            exception = e;
+        } catch (IOException e) {
+            e.printStackTrace();
+            exception = e;
+        } finally {
+            if (!noExceptionThrown) {
+                new Notification(
+                        "<strong>" + tr("Austria Address Helper") + "</strong>" +
+                                tr("An unexpected exception occurred while checking for address duplicates:") + exception.toString()
+                )
+                .setIcon(JOptionPane.ERROR_MESSAGE)
+                .show();
+
+                urls = null;
+            }
+        }
+
+        return urls;
     }
 
     protected static String getRememberedAddressTypeOrAsk(String streetOrPlace, String houseNumber, String postcode, String city) {
