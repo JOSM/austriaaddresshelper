@@ -1,11 +1,16 @@
 package org.openstreetmap.josm.plugins.austriaaddresshelper;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Desktop;
+import java.awt.Font;
 import java.net.URL;
 
-import javax.swing.*;
+import javax.swing.JEditorPane;
+import javax.swing.JLabel;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
+
+import org.openstreetmap.josm.tools.Logging;
 
 public class MessageWithLink extends JEditorPane {
     private static final long serialVersionUID = 1L;
@@ -30,7 +35,7 @@ public class MessageWithLink extends JEditorPane {
         try {
             Desktop.getDesktop().browse(url.toURI());
         } catch (Exception e) {
-            e.printStackTrace();
+            Logging.error(e);
         }
     }
 

@@ -2,15 +2,26 @@ package org.openstreetmap.josm.plugins.austriaaddresshelper;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
 
-import org.openstreetmap.josm.Main;
-import org.openstreetmap.josm.gui.ExtendedDialog;
-
-import javax.swing.*;
-import javax.swing.plaf.metal.MetalToggleButtonUI;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JToggleButton;
+
+import org.openstreetmap.josm.gui.ExtendedDialog;
+import org.openstreetmap.josm.gui.MainApplication;
 
 /**
  * @author Thomas Konrad (mail@thomaskonrad.at)
@@ -34,7 +45,7 @@ public class AddressTypeDialog extends ExtendedDialog {
     JCheckBox rememberChoiceCheckbox;
 
     public AddressTypeDialog(String placeName, String houseNumber, String postcode, String city) {
-        super(Main.parent, tr("Please choose the address type"), BUTTON_TEXTS, true);
+        super(MainApplication.getMainFrame(), tr("Please choose the address type"), BUTTON_TEXTS, true);
 
         this.placeName = placeName;
         this.houseNumber = houseNumber;

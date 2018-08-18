@@ -12,16 +12,24 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 
-import javax.json.*;
-import javax.swing.*;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.JsonValue;
+import javax.swing.JOptionPane;
 
-import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.JosmAction;
 import org.openstreetmap.josm.command.ChangeCommand;
 import org.openstreetmap.josm.command.Command;
 import org.openstreetmap.josm.command.SequenceCommand;
+import org.openstreetmap.josm.data.UndoRedoHandler;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.coor.conversion.DecimalDegreesCoordinateFormat;
 import org.openstreetmap.josm.data.osm.Node;
@@ -76,7 +84,7 @@ public class AustriaAddressHelperAction extends JosmAction {
         	}
         }
         if (!commands.isEmpty()) {
-            MainApplication.undoRedo.add(new SequenceCommand(trn("Add address", "Add addresses", commands.size()), commands));
+            UndoRedoHandler.getInstance().add(new SequenceCommand(trn("Add address", "Add addresses", commands.size()), commands));
         }
     }
     
@@ -181,7 +189,7 @@ public class AustriaAddressHelperAction extends JosmAction {
                 int dialogAnswer = -2;
 
                 if (existingObjectsWithThatAddress == null) {
-                    dialogAnswer = JOptionPane.showOptionDialog(Main.parent, tr("Unable to check whether this address already exists in OpenStreetMap: Continue anyway?"), tr("Address Duplicate Check Failed"),
+                    dialogAnswer = JOptionPane.showOptionDialog(MainApplication.getMainFrame(), tr("Unable to check whether this address already exists in OpenStreetMap: Continue anyway?"), tr("Address Duplicate Check Failed"),
                             JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, null, null);
                 } else if (existingObjectsWithThatAddress.size() > 0) {
                     StringBuilder urlList = new StringBuilder();
@@ -200,7 +208,7 @@ public class AustriaAddressHelperAction extends JosmAction {
                     Object[] options = { tr("Yes"), tr("No") };
 
                     dialogAnswer = JOptionPane.showOptionDialog(
-                            Main.parent,
+                            MainApplication.getMainFrame(),
                             new MessageWithLink(
                                     tr("The following objects in OpenStreetMap already have this address:") +
                                     urlList.toString() +
