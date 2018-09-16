@@ -20,7 +20,13 @@
 
     <property name="plugin.canloadatruntime" value="true"/>
 
-    <!-- ** include targets that all plugins have in common ** -->
+    <target name="additional-manifest">
+        <manifest file="MANIFEST" mode="update">
+            <attribute name="12735_Plugin-Url" value="v0.6.0;https://github.com/JOSM/austriaaddresshelper/releases/download/v0.6.0/austriaaddresshelper.jar" />
+        </manifest>
+    </target>
+
+	<!-- ** include targets that all plugins have in common ** -->
     <import file="../build-common.xml"/>
 
 	<target name="installPlugin" depends="clean, dist, install">
