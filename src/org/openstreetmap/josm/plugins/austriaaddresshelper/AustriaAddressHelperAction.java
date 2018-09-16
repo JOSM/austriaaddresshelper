@@ -156,9 +156,9 @@ public class AustriaAddressHelperAction extends JosmAction {
                 newObject.remove("addr:place");
 
                 // Decide whether the address type is 'street' or 'place'.
-                if ((firstAddress.getString("address_type")).equals("place")) {
+                if (firstAddress.getString("address_type").equals("place")) {
                     newObject.put("addr:place", streetOrPlace);
-                } else if ((firstAddress.getString("address_type")).equals("street")) {
+                } else if (firstAddress.getString("address_type").equals("street")) {
                     newObject.put("addr:street", streetOrPlace);
                 } else {
                     // Get remembered choice or ask the user.
