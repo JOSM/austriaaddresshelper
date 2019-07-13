@@ -3,22 +3,12 @@
 
     <!-- enter the SVN commit message -->
     <property name="commit.message" value="Commit message"/>
-    <!-- enter the *lowest* JOSM version this plugin is currently compatible with -->
-    <property name="plugin.main.version" value="14153"/>
 
     <!-- Configure these properties (replace "..." accordingly).
          See https://josm.openstreetmap.de/wiki/DevelopersGuide/DevelopingPlugins
     -->
-    <property name="plugin.author" value="Thomas Konrad"/>
-    <property name="plugin.class" value="org.openstreetmap.josm.plugins.austriaaddresshelper.AustriaAddressHelperPlugin"/>
-    <property name="plugin.description" value="Automatically assigns the address to a selected object in Austria. Data © Österreichisches Adressregister 2017, N 23806/2017."/>
-    <property name="plugin.icon" value="images/icon.png"/>
-    <property name="plugin.link" value="https://wiki.openstreetmap.org/wiki/JOSM/Plugins/AustriaAddressHelper"/>
-    <!--<property name="plugin.early" value="..."/>-->
-    <!--<property name="plugin.requires" value="..."/>-->
-    <!--<property name="plugin.stage" value="..."/>-->
-
-    <property name="plugin.canloadatruntime" value="true"/>
+    <!-- edit the properties of this plugin in the file `gradle.properties` -->
+    <property file="${basedir}/gradle.properties"/>
 
     <target name="additional-manifest">
         <manifest file="MANIFEST" mode="update">
