@@ -34,7 +34,7 @@ public class AddressTypeDialog extends ExtendedDialog {
     protected String city;
 
     protected static final String[] BUTTON_TEXTS = new String[] {tr("OK"), tr("Cancel")};
-    protected static final String[] BUTTON_ICONS = new String[] {"ok.png", "cancel.png"};
+    protected static final String[] BUTTON_ICONS = new String[] {"ok", "cancel"};
 
     public static final String ADDRESS_TYPE_STREET = "street";
     public static final String ADDRESS_TYPE_PLACE = "place";
