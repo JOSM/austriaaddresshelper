@@ -36,6 +36,7 @@ import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.Way;
+import org.openstreetmap.josm.data.preferences.StringProperty;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.io.OverpassDownloadReader;
@@ -47,7 +48,8 @@ import org.openstreetmap.josm.tools.Shortcut;
  * Created by tom on 02/08/15.
  */
 public class AustriaAddressHelperAction extends JosmAction {
-    static final String baseUrl = "https://bev-reverse-geocoder.thomaskonrad.at/reverse-geocode/json";
+    static final StringProperty baseUrl = new StringProperty("austriaaddresshelper.url",
+            "https://bev-reverse-geocoder.thomaskonrad.at/reverse-geocode/json");
     static boolean addressTypeDialogCanceled = false;
 
     protected static HashMap<HashMap<String, String>, String> rememberedAddressTypeChoices = new HashMap<>();
@@ -95,7 +97,7 @@ public class AustriaAddressHelperAction extends JosmAction {
         LatLon center = selectedObject.getBBox().getCenter();
 
         try {
-            URL url = new URL(baseUrl
+            URL url = new URL(baseUrl.get()
                     + "?lat=" + URLEncoder.encode(DecimalDegreesCoordinateFormat.INSTANCE.latToString(center), "UTF-8")
                     + "&lon=" + URLEncoder.encode(DecimalDegreesCoordinateFormat.INSTANCE.lonToString(center), "UTF-8")
                     + "&distance=30"
