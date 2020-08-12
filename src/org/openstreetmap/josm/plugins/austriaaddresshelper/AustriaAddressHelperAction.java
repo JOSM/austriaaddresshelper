@@ -38,6 +38,7 @@ import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.Notification;
+import org.openstreetmap.josm.io.OverpassDownloadReader;
 import org.openstreetmap.josm.tools.HttpClient;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Shortcut;
@@ -54,7 +55,6 @@ public class AustriaAddressHelperAction extends JosmAction {
     protected static String[] streetTypeTags = {"addr:street", "addr:place", "addr:hamlet", "addr:suburb"};
     protected static String[] objectTypesToCheckforDuplicates = {"way", "node", "relation"};
     protected static String streetTypeTagPlaceholder = "___street_type_tag___";
-    protected static String overpassBaseUrl = "https://overpass-api.de/api/interpreter";
 
     public AustriaAddressHelperAction() {
         super(tr("Fetch Address"), new ImageProvider("icon.png"), tr("Fetch Address"),
@@ -356,7 +356,7 @@ public class AustriaAddressHelperAction extends JosmAction {
         Exception exception = null;
 
         try {
-            URL url = new URL(overpassBaseUrl
+            URL url = new URL(OverpassDownloadReader.OVERPASS_SERVER.get() + "interpreter"
                     + "?data=" + URLEncoder.encode(query, "UTF-8")
             );
 
