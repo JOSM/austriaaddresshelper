@@ -15,8 +15,11 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -26,16 +29,13 @@ import javax.json.JsonValue;
 import javax.swing.JOptionPane;
 
 import org.openstreetmap.josm.actions.JosmAction;
-import org.openstreetmap.josm.command.ChangeCommand;
+import org.openstreetmap.josm.command.ChangePropertyCommand;
 import org.openstreetmap.josm.command.Command;
 import org.openstreetmap.josm.command.SequenceCommand;
 import org.openstreetmap.josm.data.UndoRedoHandler;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.coor.conversion.DecimalDegreesCoordinateFormat;
-import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
-import org.openstreetmap.josm.data.osm.Relation;
-import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.data.preferences.StringProperty;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.Notification;
@@ -80,9 +80,9 @@ public class AustriaAddressHelperAction extends JosmAction {
 
         final List<Command> commands = new ArrayList<>();
         for (OsmPrimitive selectedObject : sel) {
-        	OsmPrimitive newObject = loadAddress(selectedObject);
+        	Map<String, String> newObject = loadAddress(selectedObject);
         	if(newObject != null){
-        		commands.add(new ChangeCommand(selectedObject, newObject));
+        		commands.add(new ChangePropertyCommand(Collections.singleton(selectedObject), newObject));
         	}
         }
         if (!commands.isEmpty()) {
@@ -90,7 +90,7 @@ public class AustriaAddressHelperAction extends JosmAction {
         }
     }
     
-    public static OsmPrimitive loadAddress(OsmPrimitive selectedObject){
+    public static Map<String, String> loadAddress(OsmPrimitive selectedObject){
         LatLon center = selectedObject.getBBox().getCenter();
 
         try {
@@ -123,13 +123,7 @@ public class AustriaAddressHelperAction extends JosmAction {
                 String streetOrPlace;
                 String houseNumber = firstAddress.getString("house_number");
 
-                final OsmPrimitive newObject = selectedObject instanceof Node
-                        ? new Node(((Node) selectedObject))
-                        : selectedObject instanceof Way
-                        ? new Way((Way) selectedObject)
-                        : selectedObject instanceof Relation
-                        ? new Relation((Relation) selectedObject)
-                        : null;
+                final Map<String, String> newObject = new TreeMap<>();
 
                 newObject.put("addr:country", country);
 
@@ -272,7 +266,7 @@ public class AustriaAddressHelperAction extends JosmAction {
         return null;
     }
 
-    protected static ArrayList<String> getUrlsOfObjectsWithThatAddress(OsmPrimitive newObject, LatLon position) {
+    protected static ArrayList<String> getUrlsOfObjectsWithThatAddress(Map<String, String> newObject, LatLon position) {
         ArrayList<String> urls = new ArrayList<>();
 
         final String header = "[out:json][timeout:10]";
