@@ -36,6 +36,7 @@ import org.openstreetmap.josm.data.UndoRedoHandler;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.coor.conversion.DecimalDegreesCoordinateFormat;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.data.preferences.BooleanProperty;
 import org.openstreetmap.josm.data.preferences.StringProperty;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.Notification;
@@ -50,6 +51,7 @@ import org.openstreetmap.josm.tools.Shortcut;
 public class AustriaAddressHelperAction extends JosmAction {
     static final StringProperty baseUrl = new StringProperty("austriaaddresshelper.url",
             "https://bev-reverse-geocoder.thomaskonrad.at/reverse-geocode/json");
+    static final BooleanProperty checkDuplicates = new BooleanProperty("austriaaddresshelper.check-duplicates", true);
     static boolean addressTypeDialogCanceled = false;
 
     protected static HashMap<HashMap<String, String>, String> rememberedAddressTypeChoices = new HashMap<>();
@@ -176,7 +178,9 @@ public class AustriaAddressHelperAction extends JosmAction {
                 newObject.put("addr:housenumber", houseNumber);
 
                 // Search for duplicates.
-                ArrayList<String> existingObjectsWithThatAddress = getUrlsOfObjectsWithThatAddress(newObject, center);
+                List<String> existingObjectsWithThatAddress = checkDuplicates.get()
+                        ? getUrlsOfObjectsWithThatAddress(newObject, center)
+                        : Collections.emptyList();
 
                 int dialogAnswer = -2;
 
