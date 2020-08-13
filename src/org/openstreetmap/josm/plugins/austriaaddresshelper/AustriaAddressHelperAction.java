@@ -91,9 +91,6 @@ public class AustriaAddressHelperAction extends JosmAction {
     }
     
     public static OsmPrimitive loadAddress(OsmPrimitive selectedObject){
-        boolean noExceptionThrown = false;
-        Exception exception = null;
-
         LatLon center = selectedObject.getBBox().getCenter();
 
         try {
@@ -176,7 +173,6 @@ public class AustriaAddressHelperAction extends JosmAction {
                                 .setDuration(2500)
                                 .show();
 
-                        noExceptionThrown = true;
                         return null;
                     } else {
                         newObject.put("addr:" + addressType, streetOrPlace);
@@ -250,11 +246,9 @@ public class AustriaAddressHelperAction extends JosmAction {
                             .setIcon(JOptionPane.INFORMATION_MESSAGE)
                             .setDuration(2500)
                             .show();
-                    noExceptionThrown = true;
 
                     return newObject;
                 } else {
-                    noExceptionThrown = true;
                     return null;
                 }
             } else {
@@ -265,29 +259,14 @@ public class AustriaAddressHelperAction extends JosmAction {
                         .setIcon(JOptionPane.ERROR_MESSAGE)
                         .show();
             }
-
-            noExceptionThrown = true;
-        } catch (MalformedURLException e) {
+        } catch (IOException | NullPointerException e) {
             e.printStackTrace();
-            exception = e;
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-            exception = e;
-        } catch (IOException e) {
-            e.printStackTrace();
-            exception = e;
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-            exception = e;
-        } finally {
-            if (!noExceptionThrown) {
-                new Notification(
-                        "<strong>" + tr("Austria Address Helper") + "</strong>" +
-                        tr("An unexpected exception occurred:") + exception.toString()
-                )
-                        .setIcon(JOptionPane.ERROR_MESSAGE)
-                        .show();
-            }
+            new Notification(
+                    "<strong>" + tr("Austria Address Helper") + "</strong>" +
+                            tr("An unexpected exception occurred:") + e.toString()
+            )
+                    .setIcon(JOptionPane.ERROR_MESSAGE)
+                    .show();
         }
 
         return null;
