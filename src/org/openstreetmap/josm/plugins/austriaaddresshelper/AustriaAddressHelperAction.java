@@ -50,7 +50,7 @@ import org.openstreetmap.josm.tools.Shortcut;
  */
 public class AustriaAddressHelperAction extends JosmAction {
     static final StringProperty baseUrl = new StringProperty("austriaaddresshelper.url",
-            "https://bev-reverse-geocoder.thomaskonrad.at/reverse-geocode/json");
+            "https://bev.kolmann.at/reverse-geocode.php");
     static final BooleanProperty checkDuplicates = new BooleanProperty("austriaaddresshelper.check-duplicates", true);
     static boolean addressTypeDialogCanceled = false;
 
