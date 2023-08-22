@@ -7,8 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.text.DecimalFormat;
@@ -21,11 +20,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.JsonValue;
+import jakarta.json.Json;
+import jakarta.json.JsonArray;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonReader;
+import jakarta.json.JsonValue;
 import javax.swing.JOptionPane;
 
 import org.openstreetmap.josm.actions.JosmAction;
@@ -43,7 +42,9 @@ import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.io.OverpassDownloadReader;
 import org.openstreetmap.josm.tools.HttpClient;
 import org.openstreetmap.josm.tools.ImageProvider;
+import org.openstreetmap.josm.tools.Logging;
 import org.openstreetmap.josm.tools.Shortcut;
+import org.openstreetmap.josm.tools.Utils;
 
 /**
  * Created by tom on 02/08/15.
@@ -52,10 +53,11 @@ public class AustriaAddressHelperAction extends JosmAction {
     static final StringProperty baseUrl = new StringProperty("austriaaddresshelper.url",
             "https://bev.kolmann.at/reverse-geocode.php");
     static final BooleanProperty checkDuplicates = new BooleanProperty("austriaaddresshelper.check-duplicates", true);
-    static boolean addressTypeDialogCanceled = false;
+    static boolean addressTypeDialogCanceled;
 
     protected static HashMap<HashMap<String, String>, String> rememberedAddressTypeChoices = new HashMap<>();
-    protected static String[] tagsToCheckForDuplicates = {"addr:city", "addr:postcode", "addr:place", "addr:street", "addr:hamlet", "addr:housenumber"};
+    protected static String[] tagsToCheckForDuplicates = {"addr:city", "addr:postcode", "addr:place", "addr:street",
+            "addr:hamlet", "addr:housenumber"};
     protected static String[] streetTypeTags = {"addr:street", "addr:place", "addr:hamlet", "addr:suburb"};
     protected static String[] objectTypesToCheckforDuplicates = {"way", "node", "relation"};
     protected static String streetTypeTagPlaceholder = "___street_type_tag___";
@@ -82,10 +84,10 @@ public class AustriaAddressHelperAction extends JosmAction {
 
         final List<Command> commands = new ArrayList<>();
         for (OsmPrimitive selectedObject : sel) {
-        	Map<String, String> newObject = loadAddress(selectedObject);
-        	if(newObject != null){
-        		commands.add(new ChangePropertyCommand(Collections.singleton(selectedObject), newObject));
-        	}
+            Map<String, String> newObject = loadAddress(selectedObject);
+            if(!Utils.isEmpty(newObject)) {
+                commands.add(new ChangePropertyCommand(Collections.singleton(selectedObject), newObject));
+            }
         }
         if (!commands.isEmpty()) {
             UndoRedoHandler.getInstance().add(new SequenceCommand(trn("Add address", "Add addresses", commands.size()), commands));
@@ -96,13 +98,13 @@ public class AustriaAddressHelperAction extends JosmAction {
         LatLon center = selectedObject.getBBox().getCenter();
 
         try {
-            URL url = new URL(baseUrl.get()
+            URL url = URI.create(baseUrl.get()
                     + "?lat=" + URLEncoder.encode(DecimalDegreesCoordinateFormat.INSTANCE.latToString(center), "UTF-8")
                     + "&lon=" + URLEncoder.encode(DecimalDegreesCoordinateFormat.INSTANCE.lonToString(center), "UTF-8")
                     + "&distance=30"
                     + "&limit=1"
                     + "&epsg=4326"
-            );
+            ).toURL();
 
             final JsonObject json;
             try (BufferedReader in = HttpClient.create(url)
@@ -115,7 +117,7 @@ public class AustriaAddressHelperAction extends JosmAction {
             }
 
             final JsonArray addressItems = json.getJsonArray("results");
-            if (addressItems.size() > 0) {
+            if (!addressItems.isEmpty()) {
                 final JsonObject firstAddress = addressItems.getJsonObject(0);
 
                 String country = "AT";
@@ -151,9 +153,9 @@ public class AustriaAddressHelperAction extends JosmAction {
                 newObject.remove("addr:place");
 
                 // Decide whether the address type is 'street' or 'place'.
-                if (firstAddress.getString("address_type").equals("place")) {
+                if ("place".equals(firstAddress.getString("address_type"))) {
                     newObject.put("addr:place", streetOrPlace);
-                } else if (firstAddress.getString("address_type").equals("street")) {
+                } else if ("street".equals(firstAddress.getString("address_type"))) {
                     newObject.put("addr:street", streetOrPlace);
                 } else {
                     // Get remembered choice or ask the user.
@@ -169,7 +171,7 @@ public class AustriaAddressHelperAction extends JosmAction {
                                 .setDuration(2500)
                                 .show();
 
-                        return null;
+                        return Collections.emptyMap();
                     } else {
                         newObject.put("addr:" + addressType, streetOrPlace);
                     }
@@ -178,16 +180,18 @@ public class AustriaAddressHelperAction extends JosmAction {
                 newObject.put("addr:housenumber", houseNumber);
 
                 // Search for duplicates.
-                List<String> existingObjectsWithThatAddress = checkDuplicates.get()
+                List<String> existingObjectsWithThatAddress = Boolean.TRUE.equals(checkDuplicates.get())
                         ? getUrlsOfObjectsWithThatAddress(newObject, center)
                         : Collections.emptyList();
 
                 int dialogAnswer = -2;
 
                 if (existingObjectsWithThatAddress == null) {
-                    dialogAnswer = JOptionPane.showOptionDialog(MainApplication.getMainFrame(), tr("Unable to check whether this address already exists in OpenStreetMap: Continue anyway?"), tr("Address Duplicate Check Failed"),
+                    dialogAnswer = JOptionPane.showOptionDialog(MainApplication.getMainFrame(),
+                            tr("Unable to check whether this address already exists in OpenStreetMap: Continue anyway?"),
+                            tr("Address Duplicate Check Failed"),
                             JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, null, null);
-                } else if (existingObjectsWithThatAddress.size() > 0) {
+                } else if (!existingObjectsWithThatAddress.isEmpty()) {
                     StringBuilder urlList = new StringBuilder();
                     urlList.append("<ul>");
 
@@ -237,7 +241,8 @@ public class AustriaAddressHelperAction extends JosmAction {
                     new Notification(
                             "<strong>" + tr("Austria Address Helper") + "</strong><br />" +
                                     tr("Successfully added address to selected object:") + "<br />" +
-                                    encodeHTML(streetOrPlace) + " " + encodeHTML(houseNumber) + ", " + encodeHTML(postcode) + " " + encodeHTML(municipality) + " (" + encodeHTML(country) + ")<br/>" +
+                                    encodeHTML(streetOrPlace) + " " + encodeHTML(houseNumber) + ", " + encodeHTML(postcode) +
+                                    " " + encodeHTML(municipality) + " (" + encodeHTML(country) + ")<br/>" +
                                     "<strong>" + tr("Distance between building center and address coordinates:") + "</strong> " +
                                     new DecimalFormat("#.##").format(distanceToAddressCoordinates) + " " + tr("meters")
                     )
@@ -247,7 +252,7 @@ public class AustriaAddressHelperAction extends JosmAction {
 
                     return newObject;
                 } else {
-                    return null;
+                    return Collections.emptyMap();
                 }
             } else {
                 new Notification(
@@ -258,7 +263,7 @@ public class AustriaAddressHelperAction extends JosmAction {
                         .show();
             }
         } catch (IOException | NullPointerException e) {
-            e.printStackTrace();
+            Logging.trace(e);
             new Notification(
                     "<strong>" + tr("Austria Address Helper") + "</strong>" +
                             tr("An unexpected exception occurred:") + e.toString()
@@ -267,7 +272,7 @@ public class AustriaAddressHelperAction extends JosmAction {
                     .show();
         }
 
-        return null;
+        return Collections.emptyMap();
     }
 
     protected static ArrayList<String> getUrlsOfObjectsWithThatAddress(Map<String, String> newObject, LatLon position) {
@@ -285,8 +290,9 @@ public class AustriaAddressHelperAction extends JosmAction {
         StringBuilder filterLineBuilder = new StringBuilder();
 
         // Iterate over all tags of the new object.
-        for (String key: newObject.keySet()) {
-            String value = newObject.get(key);
+        for (Map.Entry<String, String> entry : newObject.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
 
             // Only filter for relevant tags.
             if (Arrays.asList(tagsToCheckForDuplicates).contains(key)) {
@@ -303,10 +309,10 @@ public class AustriaAddressHelperAction extends JosmAction {
                     tagName = key;
                 }
 
-                filterLineBuilder.append(tagName.replaceAll("\"", "\\\\\"")); // Escape double quotes
+                filterLineBuilder.append(tagName.replace("\"", "\\\\\"")); // Escape double quotes
 
                 filterLineBuilder.append("\"=\"");
-                filterLineBuilder.append(value.replaceAll("\"", "\\\\\"")); // Escape double quotes
+                filterLineBuilder.append(value.replace("\"", "\\\\\"")); // Escape double quotes
                 filterLineBuilder.append("\"]");
             }
         }
@@ -335,9 +341,9 @@ public class AustriaAddressHelperAction extends JosmAction {
         Exception exception = null;
 
         try {
-            URL url = new URL(OverpassDownloadReader.OVERPASS_SERVER.get() + "interpreter"
+            URL url = URI.create(OverpassDownloadReader.OVERPASS_SERVER.get() + "interpreter"
                     + "?data=" + URLEncoder.encode(query, "UTF-8")
-            );
+            ).toURL();
 
             final JsonObject json;
 
@@ -352,30 +358,27 @@ public class AustriaAddressHelperAction extends JosmAction {
 
             final JsonArray items = json.getJsonArray("elements");
 
-            if (items.size() > 0) {
+            if (!items.isEmpty()) {
                 for (JsonValue item: items) {
                     JsonObject itemObject = item.asJsonObject();
 
-                    try {
-                        String type = itemObject.getString("type");
-                        int osmId = itemObject.getInt("id");
-
-                        urls.add("https://www.openstreetmap.org/" + URLEncoder.encode(type, "UTF-8") + "/" + URLEncoder.encode(Integer.toString(osmId), "UTF-8"));
-                    } catch (NullPointerException e) {
+                    String type = itemObject.getString("type", null);
+                    int osmId = itemObject.getInt("id", 0);
+                    if (type == null || osmId == 0) {
                         urls.add("<Could not generate URL>");
+                    } else {
+                        urls.add("https://www.openstreetmap.org/" + URLEncoder.encode(type, "UTF-8") +
+                                "/" + URLEncoder.encode(Integer.toString(osmId), "UTF-8"));
                     }
                 }
             }
 
             noExceptionThrown = true;
-        } catch (MalformedURLException | UnsupportedEncodingException | NullPointerException e) {
-            e.printStackTrace();
-            exception = e;
         } catch (IOException e) {
-            e.printStackTrace();
+            Logging.trace(e);
             exception = e;
         } finally {
-            if (!noExceptionThrown) {
+            if (!noExceptionThrown && exception != null) {
                 new Notification(
                         "<strong>" + tr("Austria Address Helper") + "</strong>" +
                                 tr("An unexpected exception occurred while checking for address duplicates:") + exception.toString()
@@ -435,18 +438,13 @@ public class AustriaAddressHelperAction extends JosmAction {
         setEnabled(selection != null && selection.size() == 1);
     }
 
-    private static String encodeHTML(String s)
-    {
-        StringBuffer out = new StringBuffer();
-        for(int i=0; i<s.length(); i++)
-        {
+    private static String encodeHTML(String s) {
+        StringBuilder out = new StringBuilder();
+        for(int i=0; i<s.length(); i++) {
             char c = s.charAt(i);
-            if(c > 127 || c=='"' || c=='<' || c=='>')
-            {
+            if(c > 127 || c=='"' || c=='<' || c=='>') {
                 out.append("&#"+(int)c+";");
-            }
-            else
-            {
+            } else {
                 out.append(c);
             }
         }

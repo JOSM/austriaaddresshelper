@@ -4,7 +4,7 @@
     <!-- enter the SVN commit message -->
     <property name="commit.message" value="Commit message"/>
     <!-- enter the *lowest* JOSM version this plugin is currently compatible with -->
-    <property name="plugin.main.version" value="14153"/>
+    <property name="plugin.main.version" value="18723"/>
 
     <!-- Configure these properties (replace "..." accordingly).
          See https://josm.openstreetmap.de/wiki/DevelopersGuide/DevelopingPlugins
@@ -23,6 +23,7 @@
     <target name="additional-manifest">
         <manifest file="MANIFEST" mode="update">
             <attribute name="12735_Plugin-Url" value="v0.6.0;https://github.com/JOSM/austriaaddresshelper/releases/download/v0.6.0/austriaaddresshelper.jar" />
+            <attribute name="14153_Plugin-Url" value="0.8.1;https://github.com/JOSM/austriaaddresshelper/releases/download/v0.8.1/austriaaddresshelper.jar" />
         </manifest>
     </target>
 
