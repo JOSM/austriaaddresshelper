@@ -6,7 +6,7 @@
     <artifactId>plugin-root</artifactId>
     <version>SNAPSHOT</version>
   </parent>
-  <artifactId>austriaadresshelper</artifactId>
+  <artifactId>austriaaddresshelper</artifactId>
   <url>${plugin.link}</url>
   <developers>
     <developer>
