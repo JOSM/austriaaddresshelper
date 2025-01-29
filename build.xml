@@ -1,36 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="austriaaddresshelper" default="dist" basedir=".">
-
-    <!-- enter the SVN commit message -->
-    <property name="commit.message" value="Commit message"/>
-    <!-- enter the *lowest* JOSM version this plugin is currently compatible with -->
-    <property name="plugin.main.version" value="18723"/>
-
-    <!-- Configure these properties (replace "..." accordingly).
+  <!-- enter the SVN commit message -->
+  <property name="commit.message" value="Commit message"/>
+  <!-- enter the *lowest* JOSM version this plugin is currently compatible with -->
+  <property name="plugin.main.version" value="19044"/>
+  <!-- Configure these properties (replace "..." accordingly).
          See https://josm.openstreetmap.de/wiki/DevelopersGuide/DevelopingPlugins
     -->
-    <property name="plugin.author" value="Thomas Konrad"/>
-    <property name="plugin.class" value="org.openstreetmap.josm.plugins.austriaaddresshelper.AustriaAddressHelperPlugin"/>
-    <property name="plugin.description" value="Automatically assigns the address to a selected object in Austria. Data © Österreichisches Adressregister 2017, N 23806/2017."/>
-    <property name="plugin.icon" value="images/icon.png"/>
-    <property name="plugin.link" value="https://wiki.openstreetmap.org/wiki/JOSM/Plugins/AustriaAddressHelper"/>
-    <!--<property name="plugin.early" value="..."/>-->
-    <!--<property name="plugin.requires" value="..."/>-->
-    <!--<property name="plugin.stage" value="..."/>-->
-
-    <property name="plugin.canloadatruntime" value="true"/>
-
-    <target name="additional-manifest">
-        <manifest file="MANIFEST" mode="update">
-            <attribute name="12735_Plugin-Url" value="v0.6.0;https://github.com/JOSM/austriaaddresshelper/releases/download/v0.6.0/austriaaddresshelper.jar" />
-            <attribute name="14153_Plugin-Url" value="0.8.1;https://github.com/JOSM/austriaaddresshelper/releases/download/v0.8.1/austriaaddresshelper.jar" />
-        </manifest>
-    </target>
-
-	<!-- ** include targets that all plugins have in common ** -->
-    <import file="../build-common.xml"/>
-
-	<target name="installPlugin" depends="clean, dist, install">
-		<echo>Installed austriaadresshelper plugin</echo>
-	</target> 
+  <property name="plugin.author" value="Thomas Konrad"/>
+  <property name="plugin.class" value="org.openstreetmap.josm.plugins.austriaaddresshelper.AustriaAddressHelperPlugin"/>
+  <property name="plugin.description" value="Automatically assigns the address to a selected object in Austria. Data © Österreichisches Adressregister 2017, N 23806/2017."/>
+  <property name="plugin.icon" value="images/icon.png"/>
+  <property name="plugin.link" value="https://wiki.openstreetmap.org/wiki/JOSM/Plugins/AustriaAddressHelper"/>
+  <!--<property name="plugin.early" value="..."/>-->
+  <!--<property name="plugin.requires" value="..."/>-->
+  <!--<property name="plugin.stage" value="..."/>-->
+  <property name="plugin.canloadatruntime" value="true"/>
+  <target name="additional-manifest">
+    <manifest file="MANIFEST" mode="update">
+      <attribute name="12735_Plugin-Url" value="v0.6.0;https://github.com/JOSM/austriaaddresshelper/releases/download/v0.6.0/austriaaddresshelper.jar"/>
+      <attribute name="14153_Plugin-Url" value="0.8.1;https://github.com/JOSM/austriaaddresshelper/releases/download/v0.8.1/austriaaddresshelper.jar"/>
+      <attribute name="18723_Plugin-Url" value="0.8.4;https://github.com/JOSM/austriaaddresshelper/releases/download/v0.8.4/austriaaddresshelper.jar"/>
+    </manifest>
+  </target>
+  <!-- ** include targets that all plugins have in common ** -->
+  <import file="../build-common.xml"/>
+  <target name="installPlugin" depends="clean, dist, install">
+    <echo>Installed austriaadresshelper plugin</echo>
+  </target>
 </project>
