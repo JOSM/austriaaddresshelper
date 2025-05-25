@@ -28,11 +28,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: ${{ (github.repository == 'JOSM/austriaadresshelper' && github.ref_type == 'branch' && github.ref_name == 'master' && github.event_name != 'schedule' && github.event_name != 'pull_request') && '20' || '1' }}
+          fetch-depth: ${{ (github.repository == 'JOSM/austriaadresshelper' && github.ref_type == 'branch' && github.ref_name == 'master' && github.event_name != 'schedule' && github.event_name != 'pull_request') && '30' || '1' }}
 
       - name: Set release needed
         id: create_release_needed
         run: |
+          set -ex
           last_tag=$(git describe --tags --abbrev=0 --always)
           release_needed="false"
           for file in $(git diff ${last_tag}..HEAD --name-only); do
