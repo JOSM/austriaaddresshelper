@@ -4,3 +4,4 @@ bin
 .svn
 build
 javadoc
+checkstyle-josm-austriaaddresshelper.xml

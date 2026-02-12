@@ -1,3 +1,4 @@
+// License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.plugins.austriaaddresshelper;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
@@ -11,6 +12,7 @@ import java.awt.event.WindowEvent;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -24,6 +26,7 @@ import org.openstreetmap.josm.gui.ExtendedDialog;
 import org.openstreetmap.josm.gui.MainApplication;
 
 /**
+ * Dialog to determine type of address
  * @author Thomas Konrad (mail@thomaskonrad.at)
  */
 public class AddressTypeDialog extends ExtendedDialog {
@@ -38,7 +41,8 @@ public class AddressTypeDialog extends ExtendedDialog {
 
     public static final String ADDRESS_TYPE_STREET = "street";
     public static final String ADDRESS_TYPE_PLACE = "place";
-    public static final List<String> ALLOWED_ADDRESS_TYPES = Arrays.asList(new String[]{ AddressTypeDialog.ADDRESS_TYPE_STREET, AddressTypeDialog.ADDRESS_TYPE_PLACE });
+    public static final List<String> ALLOWED_ADDRESS_TYPES = Arrays.asList(new String[]{
+        AddressTypeDialog.ADDRESS_TYPE_STREET, AddressTypeDialog.ADDRESS_TYPE_PLACE });
 
     JToggleButton streetButton;
     JToggleButton placeButton;
@@ -133,7 +137,7 @@ public class AddressTypeDialog extends ExtendedDialog {
         return rememberChoiceCheckbox.isSelected();
     }
 
-    public HashMap<String, String> getRememberedChoice() {
+    public Map<String, String> getRememberedChoice() {
         HashMap<String, String> choice = new HashMap<String, String>();
         choice.put("place_name", placeName);
         choice.put("postcode", postcode);

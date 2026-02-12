@@ -1,3 +1,4 @@
+// License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.plugins.austriaaddresshelper;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
@@ -55,7 +56,7 @@ public class AustriaAddressHelperAction extends JosmAction {
     static final BooleanProperty checkDuplicates = new BooleanProperty("austriaaddresshelper.check-duplicates", true);
     static boolean addressTypeDialogCanceled;
 
-    protected static HashMap<HashMap<String, String>, String> rememberedAddressTypeChoices = new HashMap<>();
+    protected static Map<Map<String, String>, String> rememberedAddressTypeChoices = new HashMap<>();
     protected static String[] tagsToCheckForDuplicates = {"addr:city", "addr:postcode", "addr:place", "addr:street",
             "addr:hamlet", "addr:housenumber"};
     protected static String[] streetTypeTags = {"addr:street", "addr:place", "addr:hamlet", "addr:suburb"};
@@ -85,7 +86,7 @@ public class AustriaAddressHelperAction extends JosmAction {
         final List<Command> commands = new ArrayList<>();
         for (OsmPrimitive selectedObject : sel) {
             Map<String, String> newObject = loadAddress(selectedObject);
-            if(!Utils.isEmpty(newObject)) {
+            if (!Utils.isEmpty(newObject)) {
                 commands.add(new ChangePropertyCommand(Collections.singleton(selectedObject), newObject));
             }
         }
@@ -94,7 +95,7 @@ public class AustriaAddressHelperAction extends JosmAction {
         }
     }
     
-    public static Map<String, String> loadAddress(OsmPrimitive selectedObject){
+    public static Map<String, String> loadAddress(OsmPrimitive selectedObject) {
         LatLon center = selectedObject.getBBox().getCenter();
 
         try {
@@ -202,7 +203,7 @@ public class AustriaAddressHelperAction extends JosmAction {
 
                     urlList.append("</ul>");
 
-                    Object[] options = { tr("Yes"), tr("No") };
+                    Object[] options = {tr("Yes"), tr("No")};
 
                     dialogAnswer = JOptionPane.showOptionDialog(
                             MainApplication.getMainFrame(),
@@ -272,17 +273,17 @@ public class AustriaAddressHelperAction extends JosmAction {
         return Collections.emptyMap();
     }
 
-    protected static ArrayList<String> getUrlsOfObjectsWithThatAddress(Map<String, String> newObject, LatLon position) {
-        ArrayList<String> urls = new ArrayList<>();
+    protected static List<String> getUrlsOfObjectsWithThatAddress(Map<String, String> newObject, LatLon position) {
+        List<String> urls = new ArrayList<>();
 
         final String header = "[out:json][timeout:10]";
 
         // Just a rough bounding box.
-        String bbox ="[bbox:" +
+        String bbox = "[bbox:" +
                 (position.getY() - 0.075) + "," +
-                (position.getX() - 0.1  ) + "," +
+                (position.getX() - 0.1) + "," +
                 (position.getY() + 0.075) + "," +
-                (position.getX() + 0.1  ) + "]";
+                (position.getX() + 0.1) + "]";
 
         StringBuilder filterLineBuilder = new StringBuilder();
 
@@ -437,10 +438,10 @@ public class AustriaAddressHelperAction extends JosmAction {
 
     private static String encodeHTML(String s) {
         StringBuilder out = new StringBuilder();
-        for(int i=0; i<s.length(); i++) {
+        for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
-            if(c > 127 || c=='"' || c=='<' || c=='>') {
-                out.append("&#"+(int)c+";");
+            if (c > 127 || c == '"' || c == '<' || c == '>') {
+                out.append("&#" + (int) c + ";");
             } else {
                 out.append(c);
             }

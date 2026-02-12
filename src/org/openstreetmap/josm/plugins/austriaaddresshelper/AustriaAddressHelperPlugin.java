@@ -1,3 +1,4 @@
+// License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.plugins.austriaaddresshelper;
 
 import org.openstreetmap.josm.gui.MainApplication;
